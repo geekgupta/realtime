@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebSocket Chat</title>
+</head>
+<body>
+    <input type="file" id="imageInput">
+    <button onclick="sendImage()">Send Image</button>
+    <ul id="messages"></ul>
+    
+    <script>
+        var user_id = prompt("Enter your user ID:");
+        var ws = new WebSocket(`ws://localhost:8000/ws/s/${user_id}`);
+        
+        function sendImage() {
+            var input = document.getElementById("imageInput");
+            var file = input.files[0];
+
+            var reader = new FileReader();
+            reader.onload = function(event) {
+                var imageData = event.target.result;
+                ws.send(imageData);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        ws.onmessage = function(event) {
+            var messages = document.getElementById('messages');
+            var message = document.createElement('li');
+
+            if (event.data instanceof Blob) {
+                var image = document.createElement('img');
+                image.src = URL.createObjectURL(event.data);
+                message.appendChild(image);
+            } else {
+                var content = document.createTextNode(event.data);
+                message.appendChild(content);
+            }
+
+            messages.appendChild(message);
+        };
+    </script>
+</body>
+</html>
